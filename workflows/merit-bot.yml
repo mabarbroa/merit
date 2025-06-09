@@ -45,9 +45,8 @@ jobs:
         
     - name: Run Merit Claim Bot
       env:
-        WALLET_ADDRESS: ${{ secrets.WALLET_ADDRESS }}
-        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         GITHUB_ACTIONS: true
+        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
       run: |
         python src/merit_bot.py
         
@@ -58,5 +57,6 @@ jobs:
         name: bot-logs-${{ github.run_number }}
         path: |
           *.log
+          *.png
           claim_history.json
         retention-days: 30
