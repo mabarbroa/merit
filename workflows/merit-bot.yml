@@ -1,0 +1,62 @@
+name: Blockscout Merit Auto Claim Bot
+
+on:
+  schedule:
+    # Jalankan setiap hari jam 00:05 UTC (otomatis)
+    - cron: '5 0 * * *'
+    # Backup schedule jam 00:30 UTC
+    - cron: '30 0 * * *'
+    # Schedule tambahan jam 12:00 UTC
+    - cron: '0 12 * * *'
+  
+  # Bisa juga dijalankan manual dari GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  claim-merits:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Setup Chrome and ChromeDriver
+      uses: browser-actions/setup-chrome@latest
+      with:
+        chrome-version: stable
+        
+    - name: Run Merit Claim Bot
+      env:
+        WALLET_ADDRESS: ${{ secrets.WALLET_ADDRESS }}
+        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        GITHUB_ACTIONS: true
+      run: |
+        python src/merit_bot.py
+        
+    - name: Upload logs as artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: bot-logs-${{ github.run_number }}
+        path: |
+          *.log
+          claim_history.json
+        retention-days: 30
